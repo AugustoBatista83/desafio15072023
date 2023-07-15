@@ -1,0 +1,79 @@
+<h2 class="my-4">Products - Real Time</h2>
+
+<!-- Formulario para agregar productos -->
+<form id="myForm" class="my-4">
+    <div class="mb-3">
+        <!-- Campo para el nombre del producto -->
+        <label for="name" class="form-label">Name:</label>
+        <input type="text" name="name" id="name" class="form-control">
+    </div>
+    <div class="mb-3">
+        <!-- Campo para el precio del producto -->
+        <label for="price" class="form-label">Price:</label>
+        <input type="number" name="price" id="price" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Enviar</button>
+</form>
+
+<hr>
+
+<!-- Tabla para mostrar los productos en tiempo real -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Price</th>
+        </tr>
+    </thead>
+    <tbody id="tbody">
+        <!-- Renderización de los productos -->
+        {{#each products}}
+        <tr>
+            <th scope="row">{{this.id}}</th>
+            <td>{{this.name}}</td>
+            <td>{{this.price}}</td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<!-- Script para la comunicación en tiempo real -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    // Inicialización del socket
+    const socket = io()
+
+    // Evento de envío del formulario
+    document.getElementById('myForm').addEventListener('submit', e => {
+        e.preventDefault()
+
+        // Obtener los valores del formulario
+        const name = document.querySelector('input[name=name]').value
+        const price = parseInt(document.querySelector('input[name=price]').value)
+
+        const product = { name, price }
+
+        // Emitir el evento 'new-product' al servidor con el nuevo producto
+        socket.emit('new-product', product)
+    })
+
+    // Evento de recepción de productos actualizados
+    socket.on('reload-table', products => {
+        console.log(products)
+        const tbody = document.getElementById('tbody')
+
+        let html = '';
+        products.forEach(product => {
+            // Generar las filas de la tabla con los datos de los productos
+            html += `<tr>
+                <th scope="row">${product.id}</th>
+                <td>${product.name}</td>
+                <td>${product.price}</td>
+            </tr>`
+        })
+
+        // Actualizar el contenido de la tabla
+        tbody.innerHTML = html
+    })
+</script>
